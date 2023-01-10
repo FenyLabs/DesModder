@@ -56,6 +56,7 @@ export interface Plugin<Settings extends GenericSettings = {}> {
   config?: readonly ConfigItem[];
   onConfigChange?(changes: Settings, config: Settings): void;
   manageConfigChange?(current: Settings, next: Settings): Settings;
+  onMessage?(message: any): void; // Change to any return type if you ever implement sending messages back
   enableRequiresReload?: boolean;
   moduleOverrides?: unknown; // should be used only in preload code, not in main code
 }

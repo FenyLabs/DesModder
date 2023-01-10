@@ -5,6 +5,7 @@ import findReplace from "./moduleOverrides/find-replace.replacements";
 import glesmos from "./moduleOverrides/glesmos.replacements";
 import hideErrors from "./moduleOverrides/hide-errors.replacements";
 import helpers from "./moduleOverrides/partials/helpers.replacements";
+import performanceInfo from "./moduleOverrides/performance-info.replacements";
 import pinExpressions from "./moduleOverrides/pin-expressions.replacements";
 import shiftEnterNewline from "./moduleOverrides/shift-enter-newline.replacements";
 import showTips from "./moduleOverrides/show-tips.replacements";
@@ -24,6 +25,7 @@ const replacementStrings = [
   debugMode,
   extraExpressionButtons,
   showTips,
+  performanceInfo,
 ];
 
 const replacements: Block[] = [];

@@ -86,18 +86,19 @@ interface EvaluatorChange {
  * timeInWorker is the total time taken across all parts of re-evaluation
  */
 export interface TimingData {
+  cacheWrites: number;
+  cacheReads: number;
   cacheHits: number;
   cacheMisses: number;
-  cacheReads: number;
-  cacheWrites: number;
+  processStatements: number;
+  updateAnalysis: number;
+  updateIntersections: number;
+  publishAllStatuses: number;
   computeAllLabels: number;
   computeAriaDescriptions: number;
   graphAllChanges: number;
-  processStatements: number;
-  publishAllStatuses: number;
+  processEvents?: number;
   timeInWorker: number;
-  updateAnalysis: number;
-  updateIntersections: number;
 }
 
 export interface TopLevelComponents {

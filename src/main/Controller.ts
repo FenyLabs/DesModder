@@ -28,6 +28,12 @@ interface PillboxButton {
   popup: (desmodderController: Controller) => unknown;
 }
 
+export interface WorkerMessage<T> {
+  DesModder: true;
+  plugin: PluginID;
+  message: T;
+}
+
 export default class Controller {
   pluginsEnabled: Map<PluginID, boolean>;
   view: View | null = null;
@@ -586,5 +592,12 @@ export default class Controller {
 
   format(key: string, args?: any) {
     return format(key, args);
+  }
+
+  handleWorkerMessage({ data }: MessageEvent<WorkerMessage<any>>) {
+    if (!data.DesModder) return;
+    let plugin = plugins.get(data.plugin);
+    if (!(plugin && plugin.onMessage)) return;
+    plugin.onMessage(data.message);
   }
 }

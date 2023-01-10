@@ -106,3 +106,20 @@ $DCGView.createElement(
   )
 )
 ```
+
+## Add event listener to send messages to DesModder from the worker
+
+*Module* `worker/workerpool`
+
+Does a thing
+
+*Find* => `from`
+```js
+$this.workers.push($worker)
+```
+
+*Replace* `from` with
+```js
+($worker.addEventListener("message", (e)=>{window.DesModder?.controller?.handleWorkerMessage(e)}),
+$this.workers.push($worker))
+```

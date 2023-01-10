@@ -1,0 +1,112 @@
+# Replacements for Performance Info
+
+*plugin* `performance-info`
+
+Might update symbol binding to shorten this, current workaround is to spam blocks
+
+## Send message when updateAnalysis is done
+
+*Module* `core/math/context`
+
+*Find* => `updateAnalysis`
+```js
+$timingData.updateAnalysis = $end - $start
+```
+
+*Replace* `updateAnalysis` with
+```js
+($timingData.updateAnalysis = $end - $start),
+  self.postMessage({
+    DesModder: true,
+    plugin: "performance-info",
+    message: {
+      type: "log-evaluation-step-timing",
+      step: "updateAnalysis",
+      time: $end - $start
+    }
+  })
+```
+
+## Send message when graphAllChanges is done
+
+*Module* `core/math/context`
+
+*Find* => `graphAllChanges`
+```js
+$timingData.graphAllChanges = $end - $start
+```
+
+*Replace* `graphAllChanges` with
+```js
+($timingData.graphAllChanges = $end - $start),
+  self.postMessage({
+    DesModder: true,
+    plugin: "performance-info",
+    message: {
+      type: "log-evaluation-step-timing",
+      step: "updateAnalysis",
+      time: $end - $start
+    }
+  }),
+  $start = ($timingData, $end)
+```
+
+## Send message when processEvents is done
+
+Also fixes vanilla bug where processEvents is not included in timeInWorker
+
+*Module* `core/math/context`
+
+*Find* => `processEvents`
+```js
+$start = ($timingData, $end);
+var $eventUpdates = this.processEvents($changeSet.events)
+```
+
+*Replace* `processEvents` with
+```js
+$start = $end;
+var $eventUpdates = this.processEvents($changeSet.events);
+$end = performance.now();
+$timingData.processEvents = $end - $start;
+self.postMessage({
+  DesModder: true,
+  plugin: "performance-info",
+  message: {
+    type: "log-evaluation-step-timing",
+    step: "processEvents",
+    time: $end - $start
+  }
+})
+```
+
+## Log individual expression timing for analysis
+
+*Module* `core/math/context`
+
+*Find* => `analyzeExpression`
+```js
+$analysis[$id] = this.statements[$id].analyze(this.policy, $frame, $analysis),
+    $analysis[$id].exportTo(this.policy, $frame)
+```
+
+*Replace* `analyzeExpression` with
+```js
+((window._dsmPerformanceStart = performance.now()),
+  ($analysis[$id] = this.statements[$id].analyze(
+    this.policy,
+    $frame,
+    $analysis
+  )),
+  self.postMessage({
+    DesModder: true,
+    plugin: "performance-info",
+    message: {
+      type: "log-expression-timing",
+      step: "updateAnalysis",
+      id: $id,
+      time: performance.now() - _dsmPerformanceStart
+    }
+  }),
+  $analysis[$id].exportTo(this.policy, $frame))
+```

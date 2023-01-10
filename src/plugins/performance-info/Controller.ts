@@ -38,6 +38,7 @@ export type PerformanceInfoMessage =
 export default class Controller {
   timingDataHistory: TimingData[] = [];
   dispatchListenerID: string;
+  isProfiler: boolean = true;
 
   constructor() {
     this.dispatchListenerID = Calc.controller.dispatcher.register((e) => {

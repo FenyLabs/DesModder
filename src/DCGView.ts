@@ -82,6 +82,7 @@ declare global {
       strong: any;
       ul: any;
       li: any;
+      canvas: any;
     }
   }
 }

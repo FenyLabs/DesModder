@@ -1,7 +1,14 @@
 import Controller from "./Controller";
 import "./PerformanceView.less";
+import colorLib from "@kurkle/color";
 import { Component, jsx } from "DCGView";
-import { Button, IconButton, Tooltip } from "components";
+import Chart, {
+  ChartArea,
+  ChartConfiguration,
+  ChartData,
+  Plugin,
+} from "chart.js/auto";
+import { Button, IconButton, IfElse, Tooltip } from "components";
 import { format } from "i18n/i18n-core";
 import DesModderController from "main/Controller";
 
@@ -9,9 +16,30 @@ export class PerformanceView extends Component<{
   controller: () => Controller;
   desModderController: () => DesModderController;
 }> {
+  chart?: Chart;
   template() {
     return (
-      <div class="dcg-popover-interior dsm-performance-info-menu">
+      <div class="dcg-popover-interior">
+        {IfElse(
+          () => {
+            return this.props.controller().isProfiler;
+          },
+          {
+            // Needs to be arrow function because of `this`
+            true: () => {
+              return this.templateProfiler();
+            },
+            false: () => {
+              return this.templateBasic();
+            },
+          }
+        )}
+      </div>
+    );
+  }
+  templateBasic() {
+    return (
+      <div class="dsm-pi-basic-menu">
         <div class="dsm-pi-pin-menu-button-container">
           <Tooltip
             gravity="s"
@@ -81,6 +109,105 @@ export class PerformanceView extends Component<{
         </div>
       </div>
     );
+  }
+  templateProfiler() {
+    return (
+      <div
+        didMount={() => {
+          this.profilerDidMount();
+        }}
+        didUpdate={() => {
+          this.profilerDidUpdate();
+        }}
+        class="dsm-pi-basic-chart-container"
+      >
+        <div class="dsm-pi-pin-menu-button-container">
+          <Tooltip
+            gravity="s"
+            tooltip={format("performance-info-sticky-tooltip")}
+          >
+            <IconButton
+              iconClass={"dsm-icon-bookmark"}
+              onTap={() => {
+                this.props.desModderController().toggleMenuPinned();
+              }}
+              btnClass={() => ({
+                "dsm-pi-pin-menu-button": true,
+                "dsm-selected":
+                  this.props.desModderController().pillboxMenuPinned,
+              })}
+            />
+          </Tooltip>
+        </div>
+        <canvas id="dsm-pi-basic-chart"></canvas>
+      </div>
+    );
+  }
+  profilerDidMount() {
+    const ctx = document.getElementById(
+      "dsm-pi-basic-chart"
+    ) as HTMLCanvasElement;
+    const colors = ["rgb(45,112,179)", "rgb(199,68,64)", "rgb(96,66,166)"].map(
+      colorLib
+    );
+    const data: ChartData<"doughnut", number[]> = {
+      labels: ["Compiling", "Rendering", "Other"],
+      datasets: [
+        {
+          data: [20, 10, 5],
+          backgroundColor: colors.map((c) => c.alpha(0.4).rgbString()),
+          borderColor: colors.map((c) => c.alpha(0.9).rgbString()),
+          borderWidth: 2.5,
+          hoverBackgroundColor: colors.map((c) => c.alpha(0.65).rgbString()),
+          hoverBorderColor: colors.map((c) => c.alpha(1).rgbString()),
+        },
+      ],
+    };
+    const centerText: Plugin<"doughnut"> = {
+      id: "centerText",
+      afterDatasetsDraw(chart, args, pluginOptions) {
+        const { ctx, data } = chart;
+        ctx.save();
+        const x = chart.getDatasetMeta(0).data[0].x;
+        const y = chart.getDatasetMeta(0).data[0].x;
+        ctx.textAlign = "center";
+        ctx.font = "30px sans-serif";
+        ctx.fillText("hi!", x, y);
+      },
+    };
+    const config: ChartConfiguration<"doughnut", number[]> = {
+      type: "doughnut",
+      data: data,
+      options: {
+        animation: false,
+        plugins: {
+          legend: {
+            position: "right",
+            labels: {
+              color: "black",
+              font: {
+                family: "Arial",
+                size: 14,
+                weight: "normal",
+              },
+            },
+          },
+          //centerText,
+        },
+      },
+    };
+    this.chart = new Chart(ctx, config);
+  }
+  profilerDidUpdate() {
+    if (!this.chart) return;
+    let timingData = this.props.controller().getTimingData();
+    this.chart.data.datasets[0].data = [
+      timingData.updateAnalysis,
+      timingData.graphAllChanges,
+      timingData.timeInWorker -
+        (timingData.updateAnalysis + timingData.graphAllChanges),
+    ].map(Math.round);
+    this.chart.update();
   }
 }
 

@@ -79,11 +79,11 @@ export default class Controller {
   }
 
   logTiming({ step, time }: StepTimingLogMessage) {
-    console.log(`${step} took ${Math.round(time)}ms`);
+    console.log(`${step} took ${time}ms`);
   }
 
   logExpressionTiming({ step, time, id }: ExpressionTimingLogMessage) {
-    console.log(`${id} took ${Math.round(time)} on step ${step}}`);
+    console.log(`${id} took ${time} on step ${step}`);
   }
 
   stop() {

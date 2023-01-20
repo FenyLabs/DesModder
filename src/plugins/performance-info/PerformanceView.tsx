@@ -2,12 +2,7 @@ import Controller from "./Controller";
 import "./PerformanceView.less";
 import colorLib from "@kurkle/color";
 import { Component, jsx } from "DCGView";
-import Chart, {
-  ChartArea,
-  ChartConfiguration,
-  ChartData,
-  Plugin,
-} from "chart.js/auto";
+import Chart, { ChartConfiguration, ChartData, Plugin } from "chart.js/auto";
 import { Button, IconButton, IfElse, Tooltip } from "components";
 import { format } from "i18n/i18n-core";
 import DesModderController from "main/Controller";
@@ -165,14 +160,22 @@ export class PerformanceView extends Component<{
     };
     const centerText: Plugin<"doughnut"> = {
       id: "centerText",
-      afterDatasetsDraw(chart, args, pluginOptions) {
-        const { ctx, data } = chart;
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        const data = chart.data as ChartData<"doughnut", number[]>;
         ctx.save();
         const x = chart.getDatasetMeta(0).data[0].x;
-        const y = chart.getDatasetMeta(0).data[0].x;
+        const y = chart.getDatasetMeta(0).data[0].y;
         ctx.textAlign = "center";
-        ctx.font = "30px sans-serif";
-        ctx.fillText("hi!", x, y);
+        ctx.textBaseline = "middle";
+        ctx.font = "14px sans-serif";
+        ctx.fillText(
+          `${data.datasets[0].data.reduce((a, b) => {
+            return a + b;
+          })}ms`,
+          x,
+          y
+        );
       },
     };
     const config: ChartConfiguration<"doughnut", number[]> = {
@@ -182,7 +185,8 @@ export class PerformanceView extends Component<{
         animation: false,
         plugins: {
           legend: {
-            position: "right",
+            position: "bottom",
+            align: "start",
             labels: {
               color: "black",
               font: {
@@ -190,11 +194,29 @@ export class PerformanceView extends Component<{
                 size: 14,
                 weight: "normal",
               },
+              filter(item, data) {
+                // Funny workaround to easily override label text
+                item.text = `${item.text}: ${
+                  data.datasets[0].data[item.index as number]
+                }ms`;
+                return true;
+              },
+            },
+            onClick: undefined,
+          },
+          tooltip: {
+            cornerRadius: 4,
+            backgroundColor: "black",
+            boxPadding: 3,
+            callbacks: {
+              label: (context) => {
+                return context.formattedValue + "ms";
+              },
             },
           },
-          //centerText,
         },
       },
+      plugins: [centerText],
     };
     this.chart = new Chart(ctx, config);
   }

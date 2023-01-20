@@ -18,7 +18,7 @@ const performanceInfo: Plugin = {
   onMessage: (message: PerformanceInfoMessage) => {
     controller?.handleMessage(message);
   },
-  enabledByDefault: false,
+  enabledByDefault: true,
 } as const;
 
 export default performanceInfo;

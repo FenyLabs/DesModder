@@ -4,6 +4,48 @@
 
 Might update symbol binding to shorten this, current workaround is to spam blocks
 
+## Store initial time
+
+*Module* `core/math/context`
+
+*Find* => `defineNow`
+```js
+var W =
+    'undefined' != typeof performance
+      ? function () {
+          return performance.now()
+        }
+      : function () {
+          return Date.now()
+        },
+```
+
+## Store initial time
+
+*Module* `core/math/context`
+
+*Find* => `initialTiming`
+```js
+.processChangeSet = function ($changeSet) {
+  var $start = $now(),
+```
+
+*Replace* `initialTiming` with
+```js
+.processChangeSet = function ($changeSet) {
+  var $start = ((
+    self.postMessage({
+    DesModder: true,
+    plugin: "performance-info",
+    message: {
+      type: "log-expression-timing",
+      step: "updateAnalysis",
+      id: $id,
+      time: performance.now() - _dsmPerformanceStart
+    }
+  })
+  ), (self._dsmPerformanceStart = $now())),
+```
 ## Send message when updateAnalysis is done
 
 *Module* `core/math/context`
@@ -97,16 +139,34 @@ $analysis[$id] = this.statements[$id].analyze(this.policy, $frame, $analysis),
     this.policy,
     $frame,
     $analysis
-  )),
-  self.postMessage({
-    DesModder: true,
-    plugin: "performance-info",
-    message: {
-      type: "log-expression-timing",
-      step: "updateAnalysis",
-      id: $id,
-      time: performance.now() - _dsmPerformanceStart
-    }
-  }),
+  )),logExpressionTiming,
   $analysis[$id].exportTo(this.policy, $frame))
+```
+
+## Log individual expression timing for graphing
+
+*Module* `core/math/context`
+
+*Find* => `graphExpression`
+```js
+this._notifyGraphComputed(
+  index,
+  analysis.graph(
+    viewport,
+    this.childIntersections.getChildIntersections(index)
+  ),
+  data
+);
+```
+
+*Replace* `graphExpression` with
+```js
+this._notifyGraphComputed(
+  index,
+  analysis.graph(
+    viewport,
+    this.childIntersections.getChildIntersections(index)
+  ),
+  data
+);
 ```

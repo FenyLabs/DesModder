@@ -10,42 +10,40 @@ Might update symbol binding to shorten this, current workaround is to spam block
 
 *Find* => `defineNow`
 ```js
-var W =
-    'undefined' != typeof performance
-      ? function () {
-          return performance.now()
-        }
-      : function () {
-          return Date.now()
-        },
+var $now =
+  'undefined' != typeof performance
+    ? function () {
+        return performance.now()
+      }
+    : function () {
+        return Date.now()
+      }
 ```
 
-## Store initial time
-
-*Module* `core/math/context`
-
-*Find* => `initialTiming`
+*Replace* `defineNow` with
 ```js
-.processChangeSet = function ($changeSet) {
-  var $start = $now(),
+var $now =
+  ((function () {
+    let sendMessage = (message) => {
+      self.postMessage({
+        DesModder: true,
+        plugin: "performance-info",
+        message: message,
+      });
+    };
+    let workerStart = performance.now();
+    let tempStart;
+    self._dsm = { sendMessage, workerStart, tempStart };
+  })(),
+  "undefined" != typeof performance
+    ? function () {
+        return performance.now();
+      }
+    : function () {
+        return Date.now();
+      });
 ```
 
-*Replace* `initialTiming` with
-```js
-.processChangeSet = function ($changeSet) {
-  var $start = ((
-    self.postMessage({
-    DesModder: true,
-    plugin: "performance-info",
-    message: {
-      type: "log-expression-timing",
-      step: "updateAnalysis",
-      id: $id,
-      time: performance.now() - _dsmPerformanceStart
-    }
-  })
-  ), (self._dsmPerformanceStart = $now())),
-```
 ## Send message when updateAnalysis is done
 
 *Module* `core/math/context`
@@ -58,15 +56,12 @@ $timingData.updateAnalysis = $end - $start
 *Replace* `updateAnalysis` with
 ```js
 ($timingData.updateAnalysis = $end - $start),
-  self.postMessage({
-    DesModder: true,
-    plugin: "performance-info",
-    message: {
-      type: "log-evaluation-step-timing",
-      step: "updateAnalysis",
-      time: $end - $start
-    }
-  })
+  self._dsm.sendMessage({
+    type: "log-evaluation-step-timing",
+    step: "updateAnalysis",
+    time: $end - $start,
+  });
+
 ```
 
 ## Send message when graphAllChanges is done

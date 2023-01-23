@@ -67,6 +67,7 @@
     "@lezer/lr": "^1.2.3",
     "@types/desmos": "^1.6.0",
     "chart.js": "^4.1.1",
+    "chartjs-plugin-zoom": "^2.0.0",
     "js-tokens": "^8.0.0",
     "prettier": "^2.7.1",
     "process": "^0.11.10"

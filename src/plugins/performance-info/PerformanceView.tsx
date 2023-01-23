@@ -2,11 +2,18 @@ import Controller from "./Controller";
 import "./PerformanceView.less";
 import colorLib from "@kurkle/color";
 import { Component, jsx } from "DCGView";
-import Chart, { ChartConfiguration, ChartData, Plugin } from "chart.js/auto";
+import Chart, {
+  ChartConfiguration,
+  ChartData,
+  ChartDatasetProperties,
+  Plugin,
+} from "chart.js/auto";
+import zoomPlugin, { zoom } from "chartjs-plugin-zoom";
 import { Button, IconButton, IfElse, Tooltip } from "components";
 import { format } from "i18n/i18n-core";
 import DesModderController from "main/Controller";
 
+Chart.register(zoomPlugin);
 export class PerformanceView extends Component<{
   controller: () => Controller;
   desModderController: () => DesModderController;
@@ -145,7 +152,7 @@ export class PerformanceView extends Component<{
     const colors = ["rgb(45,112,179)", "rgb(199,68,64)", "rgb(96,66,166)"].map(
       colorLib
     );
-    const data: ChartData<"doughnut", number[]> = {
+    const pieData: ChartData<"doughnut", number[]> = {
       labels: ["Compiling", "Rendering", "Other"],
       datasets: [
         {
@@ -178,9 +185,9 @@ export class PerformanceView extends Component<{
         );
       },
     };
-    const config: ChartConfiguration<"doughnut", number[]> = {
+    const pieConfig: ChartConfiguration<"doughnut", number[]> = {
       type: "doughnut",
-      data: data,
+      data: pieData,
       options: {
         animation: false,
         plugins: {
@@ -218,17 +225,85 @@ export class PerformanceView extends Component<{
       },
       plugins: [centerText],
     };
-    this.chart = new Chart(ctx, config);
+    const barData: ChartData<"bar", { row: string; timing: number[] }[]> = {
+      labels: ["Steps", "Expressions", "Expression Steps"],
+      datasets: [
+        {
+          data: [],
+          backgroundColor: colors[0].rgbString(),
+          borderColor: colors[1].rgbString(),
+          borderWidth: 1,
+        },
+      ],
+    };
+
+    const barConfig: ChartConfiguration<
+      "bar",
+      { row: string; timing: number[] }[]
+    > = {
+      type: "bar",
+      data: barData,
+      options: {
+        animation: false,
+        parsing: {
+          yAxisKey: "row",
+          xAxisKey: "timing",
+        },
+        scales: {
+          y: {
+            stacked: true,
+            ticks: { display: false },
+          },
+          x: {
+            stacked: false,
+            ticks: { display: false },
+            beginAtZero: false,
+          },
+        },
+        indexAxis: "y",
+        plugins: {
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              mode: "x",
+            },
+            pan: {
+              enabled: true,
+              scaleMode: "x",
+              threshold: 0.25,
+              modifierKey: "shift"
+            },
+          },
+        },
+      },
+    };
+    this.chart = new Chart(ctx, barConfig);
   }
-  profilerDidUpdate() {
+  profilerDidUpdate() {   
     if (!this.chart) return;
-    let timingData = this.props.controller().getTimingData();
+    let { stepsHistory, expressionsHistory } = this.props.controller();
+    let data: { row: string; timing: number[] }[] = [];
+    stepsHistory
+      .forEach((step) => {
+        data.push({ row: "Steps", timing: step.timing });
+      });
+    expressionsHistory
+      .forEach((expression) => {
+        data.push({ row: "Expressions", timing: expression.timing });
+      });
+
+    // @ts-ignore
+    this.chart.data.datasets[0].data = data;
+    /*let timingData = this.props.controller().getTimingData();
     this.chart.data.datasets[0].data = [
       timingData.updateAnalysis,
       timingData.graphAllChanges,
       timingData.timeInWorker -
         (timingData.updateAnalysis + timingData.graphAllChanges),
-    ].map(Math.round);
+    ].map(Math.round);*/
+
     this.chart.update();
   }
 }

@@ -41,7 +41,7 @@ var $now =
       }
     : function () {
         return Date.now();
-      });
+      })
 ```
 
 ## Send message when updateAnalysis is done
@@ -59,8 +59,9 @@ $timingData.updateAnalysis = $end - $start
   self._dsm.sendMessage({
     type: "log-evaluation-step-timing",
     step: "updateAnalysis",
-    time: $end - $start,
-  });
+    timing: [$start, $end],
+    workerStart: self._dsm.workerStart,
+  })
 
 ```
 
@@ -76,14 +77,11 @@ $timingData.graphAllChanges = $end - $start
 *Replace* `graphAllChanges` with
 ```js
 ($timingData.graphAllChanges = $end - $start),
-  self.postMessage({
-    DesModder: true,
-    plugin: "performance-info",
-    message: {
-      type: "log-evaluation-step-timing",
-      step: "updateAnalysis",
-      time: $end - $start
-    }
+  self._dsm.sendMessage({
+    type: "log-evaluation-step-timing",
+    step: "graphAllChanges",
+    timing: [$start, $end],
+    workerStart: self._dsm.workerStart,
   }),
   $start = ($timingData, $end)
 ```
@@ -106,15 +104,12 @@ $start = $end;
 var $eventUpdates = this.processEvents($changeSet.events);
 $end = performance.now();
 $timingData.processEvents = $end - $start;
-self.postMessage({
-  DesModder: true,
-  plugin: "performance-info",
-  message: {
-    type: "log-evaluation-step-timing",
-    step: "processEvents",
-    time: $end - $start
-  }
-})
+self._dsm.sendMessage({
+  type: "log-evaluation-step-timing",
+  step: "graphAllChanges",
+  timing: [$start, $end],
+  workerStart: self._dsm.workerStart,
+});
 ```
 
 ## Log individual expression timing for analysis
@@ -129,12 +124,18 @@ $analysis[$id] = this.statements[$id].analyze(this.policy, $frame, $analysis),
 
 *Replace* `analyzeExpression` with
 ```js
-((window._dsmPerformanceStart = performance.now()),
+((self._dsm.tempStart = performance.now()),
   ($analysis[$id] = this.statements[$id].analyze(
     this.policy,
     $frame,
     $analysis
-  )),logExpressionTiming,
+  )),self._dsm.sendMessage({
+    type: "log-expression-timing",
+    step: "analyzeExpression",
+    timing: [self._dsm.tempStart, performance.now()],
+    id: $id,
+    workerStart: self._dsm.workerStart,
+  }),
   $analysis[$id].exportTo(this.policy, $frame))
 ```
 
@@ -145,23 +146,34 @@ $analysis[$id] = this.statements[$id].analyze(this.policy, $frame, $analysis),
 *Find* => `graphExpression`
 ```js
 this._notifyGraphComputed(
-  index,
-  analysis.graph(
-    viewport,
-    this.childIntersections.getChildIntersections(index)
+  $index,
+  $analysis.graph(
+    $viewport,
+    this.childIntersections.getChildIntersections($index)
   ),
-  data
-);
+  $data
+)
 ```
 
 *Replace* `graphExpression` with
 ```js
 this._notifyGraphComputed(
-  index,
-  analysis.graph(
-    viewport,
-    this.childIntersections.getChildIntersections(index)
-  ),
-  data
-);
+  $index,
+  (() => {
+    let tempStart = performance.now();
+    let result = $analysis.graph(
+      $viewport,
+      this.childIntersections.getChildIntersections($index)
+    );
+    self._dsm.sendMessage({
+      type: "log-expression-timing",
+      step: "graphAllChanges",
+      timing: [tempStart, performance.now()],
+      id: $index,
+      workerStart: self._dsm.workerStart,
+    });
+    return result;
+  })(),
+  $data
+)
 ```

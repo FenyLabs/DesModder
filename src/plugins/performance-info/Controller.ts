@@ -18,20 +18,27 @@ const defaultTimingData: TimingData = {
   timeInWorker: 0,
 };
 
+interface WorkerStartLogMessage {
+  type: "log-worker-start";
+  time: number;
+}
 interface StepTimingLogMessage {
   type: "log-evaluation-step-timing";
   step: keyof TimingData;
-  time: number;
+  timing: [number, number];
+  workerStart: number;
 }
 
 interface ExpressionTimingLogMessage {
   type: "log-expression-timing";
   step: keyof TimingData;
   id: string;
-  time: number;  
+  timing: [number, number];
+  workerStart: number;
 }
 
 export type PerformanceInfoMessage =
+  | WorkerStartLogMessage
   | StepTimingLogMessage
   | ExpressionTimingLogMessage;
 
@@ -39,6 +46,14 @@ export default class Controller {
   timingDataHistory: TimingData[] = [];
   dispatchListenerID: string;
   isProfiler: boolean = true;
+
+  workerStart: number = 0;
+  stepsHistory: { step: keyof TimingData; timing: [number, number] }[] = [];
+  expressionsHistory: {
+    step: keyof TimingData;
+    id: string;
+    timing: [number, number];
+  }[] = [];
 
   constructor() {
     this.dispatchListenerID = Calc.controller.dispatcher.register((e) => {
@@ -70,20 +85,37 @@ export default class Controller {
   handleMessage(message: PerformanceInfoMessage) {
     switch (message.type) {
       case "log-evaluation-step-timing":
-        this.logTiming(message)
+        this.logTiming(message);
         break;
       case "log-expression-timing":
-        this.logExpressionTiming(message)
+        this.logExpressionTiming(message);
         break;
     }
   }
 
-  logTiming({ step, time }: StepTimingLogMessage) {
-    console.log(`${step} took ${time}ms`);
+  logWorkerStart({ time }: WorkerStartLogMessage) {
+    this.workerStart = time;
+    console.log(`worker started at ${time}`);
+    updateView();
   }
 
-  logExpressionTiming({ step, time, id }: ExpressionTimingLogMessage) {
-    console.log(`${id} took ${time} on step ${step}`);
+  logTiming({ step, timing, workerStart }: StepTimingLogMessage) {
+    this.workerStart = workerStart;
+    this.stepsHistory.push({ step, timing });
+    console.log(`${step} took ${timing[1]-timing[0]}ms (${timing[0]}-${timing[1]})`);
+    updateView();
+  }
+
+  logExpressionTiming({
+    step,
+    timing,
+    id,
+    workerStart,
+  }: ExpressionTimingLogMessage) {
+    this.workerStart = workerStart;
+    this.expressionsHistory.push({ step, timing, id });
+    console.log(`${id} took ${timing[1]-timing[0]} on step ${step} (${timing[0]}-${timing[1]})`);
+    updateView();
   }
 
   stop() {

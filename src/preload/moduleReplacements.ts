@@ -3,6 +3,7 @@ import betterEvaluationView from "./moduleOverrides/better-evaluation-view.repla
 import debugMode from "./moduleOverrides/debug-mode.replacements";
 import extraExpressionButtons from "./moduleOverrides/extra-expression-buttons.replacements";
 import findReplace from "./moduleOverrides/find-replace.replacements";
+import folderTools from "./moduleOverrides/folder-tools.replacements";
 import glesmos from "./moduleOverrides/glesmos.replacements";
 import hideErrors from "./moduleOverrides/hide-errors.replacements";
 import insertPanels from "./moduleOverrides/insert-panels.replacements";
@@ -28,6 +29,7 @@ const replacementStrings = [
   debugMode,
   extraExpressionButtons,
   showTips,
+  folderTools,
 ];
 
 const replacements: Block[] = [];

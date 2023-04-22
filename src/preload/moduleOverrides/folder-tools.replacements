@@ -20,6 +20,18 @@ isMultiSelectEnabled() {
 }
 ```
 
+*Find* => `dcgSelected`
+```js
+this.controller.isItemSelected(this.id) &&
+!this.controller.isInEditListMode(),
+```
+
+*Replace* `dcgSelected` with
+```js
+this.controller.isItemSelected(this.id) &&
+(!this.controller.isInEditListMode() || window?.DesModder?.controller.isPluginEnabled("folder-tools")),
+```
+
 *Find* => `getIconMode`
 ```js
 ? "error"
@@ -53,7 +65,11 @@ onTap: $e => {
 onTap: $e => {
   if (!$e.wasHandled("dragdrop") && !$e.wasLongheld()) {
     if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
-      return console.log("onTap!");
+      this.controller.dispatch({
+        type: "toggle-selected-with-multi-select",
+        id: this.model.id
+      });
+      return
     };
     __onTapOld__
   }
@@ -79,7 +95,7 @@ $Dcgview.createElement($circleIconComponent, {
   iconType: this.bindFn(() => {
     if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
       let isChecked = this.controller.isItemSelected(this.model.id);
-      return isChecked ? "none" : "hidden";
+      return isChecked ? "check" : "hidden";
     }
     return this.getIconType()
   }),
@@ -99,4 +115,28 @@ $Dcgview.createElement($circleIconComponent, {
   backgroundImage: this.bindFn(this.backgroundImage),
   backgroundOpacity: this.const(1)
 })
+```
+
+*Find* => `primaryIcon`
+```js
+primaryIcon() {
+  let $iconType = this.props.iconType();
+```
+
+*Replace* `primaryIcon` with
+```js
+primaryIcon() {
+  let $iconType = this.props.iconType();
+  if ($iconType === "check") return "dcg-icon-check";
+```
+
+*Find* => `exitELM`
+```js
+exitEditListMode() {
+```
+
+*Replace* `exitELM` with
+```js
+exitEditListMode() {
+  if (window?.DesModder?.controller?.isPluginEnabled("folder-tools")) return;
 ```

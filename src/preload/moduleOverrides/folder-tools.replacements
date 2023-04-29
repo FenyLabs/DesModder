@@ -2,9 +2,10 @@
 
 *plugin* `folder-tools`
 
-## Override circular icons in sidebar
+## Add multiselect checkboxes
+*Module* `*`
 
-*Module* `expressions/expression-icon-view`
+Allow multiselect and selected UI in ELM
 
 *Find* => `multiSelect`
 ```js
@@ -32,23 +33,138 @@ this.controller.isItemSelected(this.id) &&
 (!this.controller.isInEditListMode() || window?.DesModder?.controller.isPluginEnabled("folder-tools")),
 ```
 
+Show folders as selected when any children are selected
+
+*Find* => `collapsedChildIsSelected`
+```js
+collapsedChildIsSelected = $m.collapsed
+```
+
+*Replace* `collapsedChildIsSelected` with
+```js
+collapsedChildIsSelected = !!($m.collapsed || window?.Calc?.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools"))
+```
+
+Override icon code to display checkboxes
+
 *Find* => `getIconMode`
 ```js
+this.hasError()
 ? "error"
 : this.controller.getGraphSettings().config.graphpaper
+```
+
+*Find* => `primaryIcon`
+```js
+primaryIcon() {
+  let $iconType = this.props.iconType();
+```
+
+*Replace* `primaryIcon` with
+```js
+primaryIcon() {
+  let $iconType = this.props.iconType();
+  if ($iconType === "check") return "dcg-icon-check";
+  if ($iconType === "minus") return "dcg-icon-minus dsm-small-icon";
 ```
 
 *Replace* `getIconMode` with
 ```js
-? "error"
-: this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")
+this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")
 ? "icon"
+: this.hasError()
+? "error"
 : this.controller.getGraphSettings().config.graphpaper
 ```
 
+Override circular icon props
+
 *Find*
 ```js
-icon: () => $Dcgview.createElement(__icon__)
+.type === "folder")
+  for (let $ of $getAllFolderItems
+```
+
+*Find* => `folderIconProps`
+```js
+$Dcgview.createElement($circleIconComponent, {
+  iconType: () => this.model.hidden ? "hidden" : "folder",
+  whiteIcon: () => this.renderAsSelected() || this.controller.isItemBeingDragged(this.model.id)
+})
+```
+
+*Replace* `folderIconProps` with
+```js
+$Dcgview.createElement($circleIconComponent, {
+  iconType: () => {
+    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+      let areAnySelected = this.renderAsSelected();
+      let areAllSelected = $getAllFolderItems(this.controller.getListModel(), this.model.id)
+        .every((item) => this.controller.getListModel().selectedItemMap[item.id]);
+      return areAllSelected ? "check" :
+        areAnySelected ? "minus" : "hidden";
+    }
+    return this.model.hidden ? "hidden" : "folder";
+  },
+  backgroundColor: () => (
+    {
+      type: "single-color",
+      value: (
+        !(this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools"))
+        ? ""
+        : window?.DesModder?.controller?.pluginSettings?.get("set-primary-color")?.primaryColor ?? "#2f72dc"
+      )
+    }
+  ),
+  whiteIcon: () => this.renderAsSelected() || this.controller.isItemBeingDragged(this.model.id)
+})
+```
+
+*Find* => `expressionIconProps`
+```js
+$.createElement($, {
+  iconType: this.bindFn(this.getIconType),
+  backgroundColor: this.bindFn(this.getBackgroundColor),
+  whiteIcon: this.bindFn(this.isSelected),
+  foregroundColor: this.bindFn(this.getForegroundColor),
+  iconModifier: this.bindFn(this.getIconModifier),
+  backgroundImage: this.bindFn(this.backgroundImage),
+  backgroundOpacity: this.const(1)
+})
+```
+
+*Replace* `expressionIconProps` with
+```js
+$Dcgview.createElement($circleIconComponent, {
+  iconType: this.bindFn(() => {
+    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+      let isChecked = this.controller.isItemSelected(this.model.id);
+      return isChecked ? "check" : "hidden";
+    }
+    return this.getIconType()
+  }),
+  backgroundColor: this.bindFn(() => {
+    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+      return {
+        type: "single-color",
+        value: window?.DesModder?.controller?.pluginSettings?.get("set-primary-color")?.primaryColor ?? "#2f72dc"
+      };
+    }
+    return this.getBackgroundColor()
+  }),
+  whiteIcon: this.bindFn(this.isSelected),
+  foregroundColor: this.bindFn(this.getForegroundColor),
+  iconModifier: this.bindFn(this.getIconModifier),
+  backgroundImage: this.bindFn(this.backgroundImage),
+  backgroundOpacity: this.const(1)
+})
+```
+
+Override tap events for icons
+
+*Find*
+```js
+icon: () => $.createElement(__icon__)
 ```
 
 *Find* inside `icon` => `onTap`
@@ -69,66 +185,41 @@ onTap: $e => {
         type: "toggle-selected-with-multi-select",
         id: this.model.id
       });
-      return
+      return;
     };
     __onTapOld__
   }
 }
 ```
 
-*Find* => `circleIcon`
+*Find* => `onTapFolder`
 ```js
-$.createElement($circleIconComponent, {
-  iconType: this.bindFn(this.getIconType),
-  backgroundColor: this.bindFn(this.getBackgroundColor),
-  whiteIcon: this.bindFn(this.isSelected),
-  foregroundColor: this.bindFn(this.getForegroundColor),
-  iconModifier: this.bindFn(this.getIconModifier),
-  backgroundImage: this.bindFn(this.backgroundImage),
-  backgroundOpacity: this.const(1)
+onTap: this.bindFn(this.toggleHidden)
+```
+
+*Replace* `onTapFolder` with
+```js
+onTap: this.bindFn(() => {
+  if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+    let folderItems = $getAllFolderItems(this.controller.getListModel(), this.model.id);
+    if (folderItems.every((item) => this.controller.getListModel().selectedItemMap[item.id])) {
+      folderItems.forEach((folderItem) => {
+        delete this.controller.getListModel().selectedItemMap[parseInt(folderItem.id)];
+      })
+    } else {
+      folderItems.forEach((folderItem) => {
+        this.controller.getListModel().selectedItemMap[parseInt(folderItem.id)] = true;
+      })
+    }
+    this.controller.updateTheComputedWorld();
+    this.controller.updateViews();
+    return;
+  }
+  return this.toggleHidden();
 })
 ```
 
-*Replace* `circleIcon` with
-```js
-$Dcgview.createElement($circleIconComponent, {
-  iconType: this.bindFn(() => {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
-      let isChecked = this.controller.isItemSelected(this.model.id);
-      return isChecked ? "check" : "hidden";
-    }
-    return this.getIconType()
-  }),
-  backgroundColor: this.bindFn(() => {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
-      let isChecked = this.controller.isItemSelected(this.model.id);
-      return {
-        type: "single-color",
-        value: window?.DesModder?.controller?.pluginSettings?.get("set-primary-color")?.primaryColor ?? "#2f72dc"
-      };
-    }
-    return this.getBackgroundColor()
-  }),
-  whiteIcon: this.bindFn(this.isSelected),
-  foregroundColor: this.bindFn(this.getForegroundColor),
-  iconModifier: this.bindFn(this.getIconModifier),
-  backgroundImage: this.bindFn(this.backgroundImage),
-  backgroundOpacity: this.const(1)
-})
-```
-
-*Find* => `primaryIcon`
-```js
-primaryIcon() {
-  let $iconType = this.props.iconType();
-```
-
-*Replace* `primaryIcon` with
-```js
-primaryIcon() {
-  let $iconType = this.props.iconType();
-  if ($iconType === "check") return "dcg-icon-check";
-```
+Prevent most events from exiting ELM
 
 *Find* => `exitELM`
 ```js

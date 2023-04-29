@@ -1,4 +1,5 @@
 import { PluginController } from "../PluginController";
+import "./folder-tools.less";
 import { ItemModel } from "globals/models";
 import { Calc } from "globals/window";
 import { List } from "utils/depUtils";

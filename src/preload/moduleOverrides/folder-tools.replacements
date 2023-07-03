@@ -2,10 +2,8 @@
 
 *plugin* `folder-tools`
 
-## Add multiselect checkboxes
-*Module* `*`
-
-Allow multiselect and selected UI in ELM
+## Enable multiselect
+*Description* `Enable multiselect`
 
 *Find* => `multiSelect`
 ```js
@@ -17,9 +15,12 @@ isMultiSelectEnabled() {
 *Replace* `multiSelect` with
 ```js
 isMultiSelectEnabled() {
-  return this.isGeometry() || window?.DesModder?.controller?.isPluginEnabled("folder-tools");
+  return this.isGeometry() || DSM.folderTools;
 }
 ```
+
+## Allow selections in ELM
+*Description* `Allow selections in Edit List Mode`
 
 *Find* => `dcgSelected`
 ```js
@@ -30,10 +31,11 @@ this.controller.isItemSelected(this.id) &&
 *Replace* `dcgSelected` with
 ```js
 this.controller.isItemSelected(this.id) &&
-(!this.controller.isInEditListMode() || window?.DesModder?.controller.isPluginEnabled("folder-tools")),
+(!this.controller.isInEditListMode() || DSM.folderTools),
 ```
 
-Show folders as selected when any children are selected
+## Highlight folders with selected children
+*Description* `Highlight folders with selected children`
 
 *Find* => `collapsedChildIsSelected`
 ```js
@@ -42,10 +44,11 @@ collapsedChildIsSelected = $m.collapsed
 
 *Replace* `collapsedChildIsSelected` with
 ```js
-collapsedChildIsSelected = !!($m.collapsed || window?.Calc?.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools"))
+collapsedChildIsSelected = !!($m.collapsed || Calc.controller.isInEditListMode() && !!DSM.folderTools)
 ```
 
-Override icon code to display checkboxes
+## Always use "icon" mode in ELM
+*Description* `Always show checkboxes in Edit List Mode`
 
 *Find* => `getIconMode`
 ```js
@@ -53,6 +56,18 @@ this.hasError()
 ? "error"
 : this.controller.getGraphSettings().config.graphpaper
 ```
+
+*Replace* `getIconMode` with
+```js
+this.controller.isInEditListMode() && !!DSM.folderTools
+? "icon"
+: this.hasError()
+? "error"
+: this.controller.getGraphSettings().config.graphpaper
+```
+
+## Register new primaryIcon types for check and minus
+*Description* `Create check and minus icons for checkboxes`
 
 *Find* => `primaryIcon`
 ```js
@@ -68,16 +83,8 @@ primaryIcon() {
   if ($iconType === "minus") return "dcg-icon-minus dsm-small-icon";
 ```
 
-*Replace* `getIconMode` with
-```js
-this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")
-? "icon"
-: this.hasError()
-? "error"
-: this.controller.getGraphSettings().config.graphpaper
-```
-
-Override circular icon props
+## Override folderIcon props
+*Description* `Show custom checkbox for folders`
 
 *Find*
 ```js
@@ -97,7 +104,7 @@ $Dcgview.createElement($circleIconComponent, {
 ```js
 $Dcgview.createElement($circleIconComponent, {
   iconType: () => {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+    if (this.controller.isInEditListMode() && !!DSM.folderTools) {
       let areAnySelected = this.renderAsSelected();
       let areAllSelected = $getAllFolderItems(this.controller.getListModel(), this.model.id)
         .every((item) => this.controller.getListModel().selectedItemMap[item.id]);
@@ -110,9 +117,9 @@ $Dcgview.createElement($circleIconComponent, {
     {
       type: "single-color",
       value: (
-        !(this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools"))
+        !(this.controller.isInEditListMode() && !!DSM.folderTools)
         ? ""
-        : window?.DesModder?.controller?.pluginSettings?.get("set-primary-color")?.primaryColor ?? "#2f72dc"
+        : DSM.setPrimaryColor?.settings.primaryColor ?? "#2f72dc"
       )
     }
   ),
@@ -120,9 +127,12 @@ $Dcgview.createElement($circleIconComponent, {
 })
 ```
 
+## Override expressionIcon props
+*Description* `Show custom checkbox for expressions`
+
 *Find* => `expressionIconProps`
 ```js
-$.createElement($, {
+$Dcgview.createElement($circleIconComponent, {
   iconType: this.bindFn(this.getIconType),
   backgroundColor: this.bindFn(this.getBackgroundColor),
   whiteIcon: this.bindFn(this.isSelected),
@@ -137,17 +147,17 @@ $.createElement($, {
 ```js
 $Dcgview.createElement($circleIconComponent, {
   iconType: this.bindFn(() => {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+    if (this.controller.isInEditListMode() && !!DSM.folderTools) {
       let isChecked = this.controller.isItemSelected(this.model.id);
       return isChecked ? "check" : "hidden";
     }
     return this.getIconType()
   }),
   backgroundColor: this.bindFn(() => {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+    if (this.controller.isInEditListMode() && !!DSM.folderTools) {
       return {
         type: "single-color",
-        value: window?.DesModder?.controller?.pluginSettings?.get("set-primary-color")?.primaryColor ?? "#2f72dc"
+        value: DSM.setPrimaryColor?.settings.primaryColor ?? "#2f72dc"
       };
     }
     return this.getBackgroundColor()
@@ -160,7 +170,8 @@ $Dcgview.createElement($circleIconComponent, {
 })
 ```
 
-Override tap events for icons
+## Override expression icon onTap
+*Description* `Allow checking checkboxes`
 
 *Find*
 ```js
@@ -180,7 +191,7 @@ onTap: $e => {
 ```js
 onTap: $e => {
   if (!$e.wasHandled("dragdrop") && !$e.wasLongheld()) {
-    if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+    if (this.controller.isInEditListMode() && !!DSM.folderTools) {
       this.controller.dispatch({
         type: "toggle-selected-with-multi-select",
         id: this.model.id
@@ -192,6 +203,15 @@ onTap: $e => {
 }
 ```
 
+## Override folder icon onTap
+*Description* `Allow checking folder checkboxes`
+
+*Find*
+```js
+.type === "folder")
+  for (let $ of $getAllFolderItems
+```
+
 *Find* => `onTapFolder`
 ```js
 onTap: this.bindFn(this.toggleHidden)
@@ -200,7 +220,7 @@ onTap: this.bindFn(this.toggleHidden)
 *Replace* `onTapFolder` with
 ```js
 onTap: this.bindFn(() => {
-  if (this.controller.isInEditListMode() && !!window?.DesModder?.controller?.isPluginEnabled("folder-tools")) {
+  if (this.controller.isInEditListMode() && !!DSM.folderTools) {
     let folderItems = $getAllFolderItems(this.controller.getListModel(), this.model.id);
     if (folderItems.every((item) => this.controller.getListModel().selectedItemMap[item.id])) {
       folderItems.forEach((folderItem) => {
@@ -219,7 +239,8 @@ onTap: this.bindFn(() => {
 })
 ```
 
-Prevent most events from exiting ELM
+## Disable explicitly exiting ELM (toggling is still allowed)
+*Description* `Avoid exiting Exit List Mode`
 
 *Find* => `exitELM`
 ```js
@@ -229,5 +250,5 @@ exitEditListMode() {
 *Replace* `exitELM` with
 ```js
 exitEditListMode() {
-  if (window?.DesModder?.controller?.isPluginEnabled("folder-tools")) return;
+  if (DSM.folderTools) return;
 ```

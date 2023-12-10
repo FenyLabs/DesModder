@@ -28,6 +28,7 @@ import VideoCreator from "./video-creator";
 import Wakatime from "./wakatime";
 import WolframToDesmos from "./wolfram2desmos";
 import BetterNavigation from "./better-navigation";
+import RealtimeCollaboration from "./realtime-collaboration";
 
 interface ConfigItemGeneric {
   // indentation level for hierarchical relationships in settings
@@ -138,6 +139,7 @@ export const keyToPlugin = {
   codeGolf: CodeGolf,
   syntaxHighlighting: SyntaxHighlighting,
   betterNavigation: BetterNavigation,
+  realtimeCollaboration: RealtimeCollaboration,
 } satisfies Record<string, Plugin<any>>;
 
 export const pluginList = Object.values(keyToPlugin);
@@ -192,7 +194,8 @@ export class TransparentPlugins implements KeyToPluginInstance {
   get exprActionButtons () { return this.ep["expr-action-buttons"]; }
   get codeGolf () { return this.ep["code-golf"]; }
   get syntaxHighlighting () { return this.ep["syntax-highlighting"]}
-  get betterNavigation () { return this.ep["better-navigation"]} 
+  get betterNavigation () { return this.ep["better-navigation"]}
+  get realtimeCollaboration () { return this.ep["realtime-collaboration"]}
 }
 
 export type IDToPluginSettings = {

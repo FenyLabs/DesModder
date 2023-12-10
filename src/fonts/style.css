@@ -1,6 +1,6 @@
 @font-face {
   font-family: "dsm-icons";
-  src: url("./dsm-icons.woff?7audmw") format("woff");
+  src: url("dsm-icons.woff?r2u8x7") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -22,12 +22,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.dsm-icon-magic:before {
-  content: "\e900";
-}
-.dsm-icon-compass2:before {
-  content: "\e94a";
-}
 .dsm-icon-folder-minus:before {
   content: "\e902";
 }
@@ -42,4 +36,16 @@
 }
 .dsm-icon-pie-chart:before {
   content: "\e99a";
+}
+.dsm-icon-compass2:before {
+  content: "\e94a";
+}
+.dsm-icon-magic:before {
+  content: "\e900";
+}
+.dsm-icon-live:before {
+  content: "\e91c";
+}
+.dsm-icon-users:before {
+  content: "\e972";
 }

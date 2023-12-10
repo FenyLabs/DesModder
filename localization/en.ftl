@@ -293,10 +293,10 @@ multiline-opt-multilinifyDelayAfterEdit-name = Edit Delay (ms)
 multiline-opt-multilinifyDelayAfterEdit-desc = Multiline expressions should be updated after no edits are made for this number of milliseconds.
 multiline-opt-spacesToNewlines-name = Spaces to Newlines
 multiline-opt-spacesToNewlines-desc = Convert groups of 3 spaces into newlines. These can be automatically created with Shift+Enter.
-multiline-opt-determineLineBreaksAutomatically-name = Auto Insert Linebreaks 
+multiline-opt-determineLineBreaksAutomatically-name = Auto Insert Linebreaks
 multiline-opt-determineLineBreaksAutomatically-desc = Automatically figure out where to put line breaks. Use Ctrl+M to trigger this.
 multiline-opt-disableAutomaticLineBreaksForHandAlignedExpressions-name = Skip expressions with triple spaces
-multiline-opt-disableAutomaticLineBreaksForHandAlignedExpressions-desc = Don't automatically insert extra line breaks in expressions that have any manually-added line breaks (triple spaces). 
+multiline-opt-disableAutomaticLineBreaksForHandAlignedExpressions-desc = Don't automatically insert extra line breaks in expressions that have any manually-added line breaks (triple spaces).
 
 ## Custom MathQuill Config
 custom-mathquill-config-name = Custom MathQuill Config
@@ -354,8 +354,17 @@ syntax-highlighting-opt-underlineHighlightedRanges-desc = Puts a dark underline 
 
 ## Better Navigation
 better-navigation-name = Better Navigation
-better-navigation-desc = Tools for making Desmos expressions easier to navigate. 
+better-navigation-desc = Tools for making Desmos expressions easier to navigate.
 better-navigation-opt-ctrlArrow-name = Ctrl+Arrow Support
 better-navigation-opt-ctrlArrow-desc = Use Ctrl+ArrowKeys or Ctrl+Shift+ArrowKeys to skip over large blocks of text quickly. Use Ctrl+Backspace to delete large blocks of text.
 better-navigation-opt-scrollableExpressions-name = Scrollable Expressions
 better-navigation-opt-scrollableExpressions-desc = Adds horizontal scrollbars to expressions. This is primarily intended to make scrolling easier on mobile.
+
+## Realtime Collaboration
+realtime-collaboration-name = Live Share
+realtime-collaboration-desc = Edit a graph with others in real time.
+realtime-collaboration-nickname = Nickname
+realtime-collaboration-room-id = Room ID
+realtime-collaboration-connect = Connect
+realtime-collaboration-connecting = Disabled
+realtime-collaboration-connect-tooltip = Connect to the room if it exists, or create it if it doesn't

@@ -167,6 +167,9 @@ export interface TopLevelComponents {
       getCurrentGraphTitle: () => string | undefined;
     };
   };
+  userController: {
+    name: string;
+  };
 }
 
 export interface Toast {

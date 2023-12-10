@@ -58,7 +58,7 @@ const categoryPlugins: Record<string, PluginID[]> = {
     "multiline",
     "syntax-highlighting",
   ],
-  integrations: ["wakatime"],
+  integrations: ["wakatime", "realtime-collaboration"],
 };
 
 const categories = ["core", "utility", "visual", "integrations"];

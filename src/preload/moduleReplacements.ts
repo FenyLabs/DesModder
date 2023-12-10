@@ -35,6 +35,7 @@ const pluginNames = [
   "code-golf",
   "syntax-highlighting",
   "better-navigation",
+  "realtime-collaboration",
 ];
 
 replacements.forEach((r) => {

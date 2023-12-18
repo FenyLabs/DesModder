@@ -14,14 +14,14 @@ export default class MainPopup extends Component<{
           {format("realtime-collaboration-name")}
         </div>
         {IfElse(() => this.props.rtc().status === "connected", {
-          true: () => <div>connected</div>,
-          false: () => this.optionsDisconnected(),
+          true: () => this.connected(),
+          false: () => this.disconnected(),
         })}
       </div>
     );
   }
 
-  optionsDisconnected() {
+  disconnected() {
     const rtc = this.props.rtc();
     return (
       <div>
@@ -77,6 +77,11 @@ export default class MainPopup extends Component<{
         </div>
       </div>
     );
+  }
+
+  connected() {
+    const rtc = this.props.rtc();
+    return <div>connected</div>;
   }
 }
 
